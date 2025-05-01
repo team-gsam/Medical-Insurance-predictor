@@ -72,7 +72,7 @@ This tool is tailored for users seeking **personalized insurance cost estimates*
 
 4. **Run the App:**
    ```bash
-   python main.py
+   python App.py
    ```
 
 ---
@@ -94,16 +94,6 @@ This tool is tailored for users seeking **personalized insurance cost estimates*
    - Predictions and logs are saved to `outputs`.
 
 ---
-
-## 📂 Output File
-
-**File:** `outputs.txt`  
-**Contains:**
-- Sample predictions
-- Error logs
-- Raw input data
-- System messages
-
 
 ## 🤝 Contributing
 
