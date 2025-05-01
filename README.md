@@ -53,7 +53,7 @@ This tool is tailored for users seeking **personalized insurance cost estimates*
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/yourusername/medical-insurance-predictor.git
+   git clone https://github.com/kethavathsamba/medical-insurance-predictor.git
    cd medical-insurance-predictor
    ```
 
@@ -91,7 +91,7 @@ This tool is tailored for users seeking **personalized insurance cost estimates*
    - **Contact Us:** Send feedback or support requests.
    - **Admin Update:** Admin panel to manage data.
 4. **Output:**
-   - Predictions and logs are saved to `outputs.txt`.
+   - Predictions and logs are saved to `outputs`.
 
 ---
 
@@ -104,13 +104,6 @@ This tool is tailored for users seeking **personalized insurance cost estimates*
 - Raw input data
 - System messages
 
-**Example:**
-```
-Raw Input Data: {'Age': '30', 'Gender': '0', 'BMI': '25', 'Smoker': '0', ...}
-Prediction Result: Insurance Cost: ₹50000, Monthly Premium: ₹2000, Policy Tier: Standard, ...
-```
-
----
 
 ## 🤝 Contributing
 
@@ -150,8 +143,3 @@ See the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 📬 Contact
-
-- **Email:** kethavathsamba11@gmail.com  
-- **Phone:** 9908108215  
-- Or use the **Contact Us** feature inside the app.
