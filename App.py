@@ -11,6 +11,23 @@ import string
 import re
 import traceback
 
+# Define modern color scheme
+COLORS = {
+    'primary': '#2196F3',      # Modern blue
+    'secondary': '#4CAF50',    # Green
+    'accent': '#FF4081',       # Pink
+    'background': '#F5F7FA',   # Light gray
+    'text': '#2C3E50',         # Dark blue-gray
+    'white': '#FFFFFF',
+    'error': '#E74C3C',        # Red
+    'warning': '#F39C12',      # Orange
+    'success': '#2ECC71',      # Green
+    'nav_bg': '#1A237E',       # Dark blue
+    'nav_hover': '#303F9F',    # Lighter blue
+    'input_bg': '#FFFFFF',
+    'input_border': '#E0E0E0',
+    'button_hover': '#1976D2'  # Darker blue
+}
 
 # Step 1: Load the saved models and scaler from the pickle files
 with open('regression_model.pkl', 'rb') as reg_model_file:
@@ -24,25 +41,89 @@ with open('scaler.pkl', 'rb') as scaler_file:
 
 current_directory = os.getcwd()
 current_user=0
+
 def update(us):
     global current_user
     current_user=us
-# ---------------- Main root ---------------- 
+
+# ---------------- Main root ----------------
 root = tk.Tk()
 root.title("🩺 Medical Insurance Predictor 🛡️")
 root.geometry("1280x720") 
-root.minsize(800, 600) 
+root.minsize(800, 600)  
 root.state('zoomed')
+
 # Global image references
 bg_photo = None
 home_photo = None 
 entries = {}  # Store input fields for easy access
 
+def create_gradient1(canvas, width, height, start_color, end_color):
+    canvas.delete("gradient") 
+    for i in range(height):
+        r1, g1, b1 = int(start_color[1:3], 16), int(start_color[3:5], 16), int(start_color[5:7], 16)
+        r2, g2, b2 = int(end_color[1:3], 16), int(end_color[3:5], 16), int(end_color[5:7], 16)
+        r = int(r1 + (r2 - r1) * (i / height))
+        g = int(g1 + (g2 - g1) * (i / height)) 
+        b = int(b1 + (b2 - b1) * (i / height))
+        color = f"#{r:02x}{g:02x}{b:02x}"
+        canvas.create_line(0, i, width, i, fill=color, tags="gradient")
+
+def create_modern_button(parent, text, command, bg_color=COLORS['primary'], fg_color=COLORS['white'], 
+                        hover_color=COLORS['button_hover'], font=("Arial", 12, "bold"), padx=20, pady=10):
+    btn = tk.Button(parent, text=text, command=command,
+                   font=font, bg=bg_color, fg=fg_color,
+                   padx=padx, pady=pady, relief="flat",
+                   cursor="hand2", borderwidth=0)
+    
+    def on_enter(e):
+        e.widget.config(bg=hover_color)
+    
+    def on_leave(e):
+        e.widget.config(bg=bg_color)
+    
+    btn.bind("<Enter>", on_enter)
+    btn.bind("<Leave>", on_leave)
+    return btn
+
+def create_modern_entry(parent, placeholder="", show=None):
+    entry = tk.Entry(parent, font=("Arial", 12),
+                    bg=COLORS['input_bg'], fg=COLORS['text'],
+                    relief="solid", borderwidth=1,
+                    highlightthickness=1,
+                    highlightbackground=COLORS['input_border'],
+                    highlightcolor=COLORS['primary'])
+    
+    if show:
+        entry.config(show=show)
+    
+    if placeholder:
+        entry.insert(0, placeholder)
+        entry.config(fg='gray')
+        
+        def on_focus_in(event):
+            if entry.get() == placeholder:
+                entry.delete(0, tk.END)
+                entry.config(fg=COLORS['text'])
+        
+        def on_focus_out(event):
+            if entry.get() == "":
+                entry.insert(0, placeholder)
+                entry.config(fg='gray')
+        
+        entry.bind("<FocusIn>", on_focus_in)
+        entry.bind("<FocusOut>", on_focus_out)
+    
+    return entry
+
+def create_modern_label(parent, text, font=("Arial", 12), fg=COLORS['text'], bg=COLORS['white']):
+    return tk.Label(parent, text=text, font=font, fg=fg, bg=bg)
+
 # ---------------- Clear Screen ----------------
 def clear_screen(): 
     for widget in root.winfo_children():
         widget.destroy()
-    root.configure(bg="white")
+    root.configure(bg=COLORS['white'])
     create_navbar()
 
 # ---------------- First Page ----------------
@@ -56,47 +137,47 @@ def create_first_page():
     first_frame.pack(fill="both", expand=True)
 
     # Create gradient background
-    gradient_canvas = tk.Canvas(first_frame, width=root.winfo_screenwidth(), height=root.winfo_screenheight(), highlightthickness=0)
+    gradient_canvas = tk.Canvas(first_frame, width=root.winfo_screenwidth(),
+                              height=root.winfo_screenheight(), highlightthickness=0)
     gradient_canvas.pack(fill="both", expand=True)
 
-    def create_gradient(canvas, width, height):
-        canvas.delete("gradient")
-        for i in range(height):
-            r1, g1, b1 = 41, 128, 185  # #2980b9
-            r2, g2, b2 = 52, 152, 219  # #3498db
-            r = int(r1 + (r2 - r1) * (i / height))
-            g = int(g1 + (g2 - g1) * (i / height))
-            b = int(b1 + (b2 - b1) * (i / height))
-            color = f"#{r:02x}{g:02x}{b:02x}"
-            canvas.create_line(0, i, width, i, fill=color, tags="gradient")
+    create_gradient1(gradient_canvas, root.winfo_screenwidth(), root.winfo_screenheight(),
+                   COLORS['primary'], COLORS['secondary'])
 
-    create_gradient(gradient_canvas, root.winfo_screenwidth(), root.winfo_screenheight())
-
-    # Create content frame
-    content_frame = tk.Frame(gradient_canvas, bg="white", padx=40, pady=40)
-    gradient_canvas.create_window(root.winfo_screenwidth() // 2, root.winfo_screenheight() // 2, 
+    # Create content frame with modern styling
+    content_frame = tk.Frame(gradient_canvas, bg=COLORS['white'], padx=40, pady=40)
+    gradient_canvas.create_window(root.winfo_screenwidth() // 2, root.winfo_screenheight() // 2,
                                 window=content_frame, anchor="center")
 
-    # Title with animation
-    title_frame = tk.Frame(content_frame, bg="white")
+    # Add shadow effect
+    content_frame.configure(highlightbackground=COLORS['input_border'],
+                          highlightthickness=1)
+
+    # Title with modern styling
+    title_frame = tk.Frame(content_frame, bg=COLORS['white'])
     title_frame.pack(pady=(0, 20))
 
     title_text = "🩺 Medical Insurance Predictor 🛡️"
-    title_label = tk.Label(title_frame, text=title_text, font=("Arial", 32, "bold"), 
-                          bg="white", fg="#2c3e50")
+    title_label = create_modern_label(title_frame, title_text,
+                                    font=("Arial", 32, "bold"),
+                                    fg=COLORS['text'])
     title_label.pack()
 
-    # Decorative line
-    tk.Frame(title_frame, height=4, width=200, bg="#4CAF50").pack(pady=10)
+    # Decorative line with gradient
+    line_canvas = tk.Canvas(title_frame, height=4, width=200,
+                           highlightthickness=0, bg=COLORS['white'])
+    line_canvas.pack(pady=10)
+    create_gradient1(line_canvas, 200, 4, COLORS['primary'], COLORS['secondary'])
 
-    # Welcome message
+    # Welcome message with modern styling
     welcome_text = "Welcome to our advanced insurance prediction system.\nGet accurate cost estimates and policy recommendations."
-    welcome_label = tk.Label(content_frame, text=welcome_text, font=("Arial", 14), 
-                           bg="white", fg="#666666", wraplength=600)
+    welcome_label = create_modern_label(content_frame, welcome_text,
+                                      font=("Arial", 14),
+                                      fg=COLORS['text'])
     welcome_label.pack(pady=20)
 
-    # Features section
-    features_frame = tk.Frame(content_frame, bg="white")
+    # Features section with modern styling
+    features_frame = tk.Frame(content_frame, bg=COLORS['white'])
     features_frame.pack(pady=20)
 
     features = [
@@ -107,21 +188,28 @@ def create_first_page():
     ]
 
     for icon, text in features:
-        feature_frame = tk.Frame(features_frame, bg="white")
+        feature_frame = tk.Frame(features_frame, bg=COLORS['white'])
         feature_frame.pack(fill="x", pady=5)
-        tk.Label(feature_frame, text=icon, font=("Arial", 16), bg="white", fg="#4CAF50").pack(side="left", padx=5)
-        tk.Label(feature_frame, text=text, font=("Arial", 12), bg="white", fg="#2c3e50").pack(side="left")
+        create_modern_label(feature_frame, icon,
+                          font=("Arial", 16),
+                          fg=COLORS['primary']).pack(side="left", padx=5)
+        create_modern_label(feature_frame, text,
+                          font=("Arial", 12),
+                          fg=COLORS['text']).pack(side="left")
 
-    # Start button with animation
-    start_btn = tk.Button(content_frame, text="Get Started →", command=show_login_page,
-                         font=("Arial", 14, "bold"), bg="#4CAF50", fg="white",
-                         padx=30, pady=15, relief="flat", cursor="hand2")
+    # Start button with modern styling
+    start_btn = create_modern_button(content_frame, "Get Started →",
+                                   show_login_page,
+                                   bg_color=COLORS['primary'],
+                                   hover_color=COLORS['button_hover'],
+                                   font=("Arial", 14, "bold"),
+                                   padx=30, pady=15)
     start_btn.pack(pady=30)
 
     def animate_button():
         def pulse():
-            start_btn.config(bg="#45a049")
-            root.after(500, lambda: start_btn.config(bg="#4CAF50"))
+            start_btn.config(bg=COLORS['button_hover'])
+            root.after(500, lambda: start_btn.config(bg=COLORS['primary']))
             root.after(1000, pulse)
         pulse()
 
@@ -192,57 +280,85 @@ def login_page():
     login_frame.pack(fill="both", expand=True)
 
     # Create gradient background
-    gradient_canvas = tk.Canvas(login_frame, width=root.winfo_screenwidth(), height=root.winfo_screenheight(), highlightthickness=0)
+    gradient_canvas = tk.Canvas(login_frame, width=root.winfo_screenwidth(),
+                              height=root.winfo_screenheight(), highlightthickness=0)
     gradient_canvas.pack(fill="both", expand=True)
 
-    def create_gradient(canvas, width, height):
-        canvas.delete("gradient")
-        for i in range(height):
-            r1, g1, b1 = 41, 128, 185  # #2980b9
-            r2, g2, b2 = 52, 152, 219  # #3498db
-            r = int(r1 + (r2 - r1) * (i / height))
-            g = int(g1 + (g2 - g1) * (i / height))
-            b = int(b1 + (b2 - b1) * (i / height))
-            color = f"#{r:02x}{g:02x}{b:02x}"
-            canvas.create_line(0, i, width, i, fill=color, tags="gradient")
-    create_gradient(gradient_canvas, root.winfo_screenwidth(), root.winfo_screenheight())
-    login_box = tk.Frame(gradient_canvas, bg="white", padx=40, pady=40)
-    gradient_canvas.create_window(root.winfo_screenwidth() // 2, root.winfo_screenheight() // 2, 
+    create_gradient1(gradient_canvas, root.winfo_screenwidth(), root.winfo_screenheight(),
+                   COLORS['primary'], COLORS['secondary'])
+
+    # Create login box with modern styling
+    login_box = tk.Frame(gradient_canvas, bg=COLORS['white'], padx=40, pady=40)
+    gradient_canvas.create_window(root.winfo_screenwidth() // 2, root.winfo_screenheight() // 2,
                                 window=login_box, anchor="center")
-    tk.Label(login_box, text="Welcome Back!", font=("Arial", 24, "bold"), 
-            bg="white", fg="#2c3e50").pack(pady=(0, 20))
-    tk.Frame(login_box, height=3, width=100, bg="#4CAF50").pack(pady=5)
-    username_frame = tk.Frame(login_box, bg="white")
+
+    # Add shadow effect
+    login_box.configure(highlightbackground=COLORS['input_border'],
+                       highlightthickness=1)
+
+    # Title with modern styling
+    title_label = create_modern_label(login_box, "Welcome Back!",
+                                    font=("Arial", 24, "bold"),
+                                    fg=COLORS['text'])
+    title_label.pack(pady=(0, 20))
+
+    # Decorative line with gradient
+    line_canvas = tk.Canvas(login_box, height=3, width=100,
+                           highlightthickness=0, bg=COLORS['white'])
+    line_canvas.pack(pady=5)
+    create_gradient1(line_canvas, 100, 3, COLORS['primary'], COLORS['secondary'])
+
+    # Username field
+    username_frame = tk.Frame(login_box, bg=COLORS['white'])
     username_frame.pack(fill="x", pady=10)
-    tk.Label(username_frame, text="Username", font=("Arial", 12), 
-            bg="white", fg="#2c3e50").pack(anchor="w")
-    username_entry = tk.Entry(username_frame, font=("Arial", 12), 
-                            bg="#f5f5f5", fg="#333333", relief="solid", borderwidth=1)
+    create_modern_label(username_frame, "Username",
+                       font=("Arial", 12),
+                       fg=COLORS['text']).pack(anchor="w")
+    username_entry = create_modern_entry(username_frame, "Enter username")
     username_entry.pack(fill="x", pady=2)
-    password_frame = tk.Frame(login_box, bg="white")
+
+    # Password field
+    password_frame = tk.Frame(login_box, bg=COLORS['white'])
     password_frame.pack(fill="x", pady=10)
-    tk.Label(password_frame, text="Password", font=("Arial", 12), 
-            bg="white", fg="#2c3e50").pack(anchor="w")
-    password_entry = tk.Entry(password_frame, font=("Arial", 12), 
-                            bg="#f5f5f5", fg="#333333", relief="solid", 
-                            borderwidth=1, show="•")
+    create_modern_label(password_frame, "Password",
+                       font=("Arial", 12),
+                       fg=COLORS['text']).pack(anchor="w")
+    password_entry = create_modern_entry(password_frame, "Enter password", show="•")
     password_entry.pack(fill="x", pady=2)
-    login_btn = tk.Button(login_box, text="Login", 
-                         command=lambda: handle_login(username_entry.get(), password_entry.get()),
-                         font=("Arial", 12, "bold"), bg="#4CAF50", fg="white",
-                         padx=20, pady=10, relief="flat", cursor="hand2")
+
+    # Login button with modern styling
+    login_btn = create_modern_button(login_box, "Login",
+                                   lambda: handle_login(username_entry.get(), password_entry.get()),
+                                   bg_color=COLORS['primary'],
+                                   hover_color=COLORS['button_hover'],
+                                   font=("Arial", 12, "bold"),
+                                   padx=20, pady=10)
     login_btn.pack(pady=20)
-    register_frame = tk.Frame(login_box, bg="white")
+
+    # Register section
+    register_frame = tk.Frame(login_box, bg=COLORS['white'])
     register_frame.pack(pady=10)
-    tk.Label(register_frame, text="Don't have an account?", font=("Arial", 10), 
-            bg="white", fg="#666666").pack(side="left")
-    register_btn = tk.Button(register_frame, text="Register", command=register_page,
-                           font=("Arial", 10, "bold"), bg="white", fg="#4CAF50",
-                           relief="flat", cursor="hand2", borderwidth=0)
+    create_modern_label(register_frame, "Don't have an account?",
+                       font=("Arial", 10),
+                       fg=COLORS['text']).pack(side="left")
+    
+    register_btn = create_modern_button(register_frame, "Register",
+                                      register_page,
+                                      bg_color=COLORS['white'],
+                                      fg_color=COLORS['primary'],
+                                      hover_color=COLORS['primary'],
+                                      font=("Arial", 10, "bold"),
+                                      padx=5, pady=0)
     register_btn.pack(side="left", padx=5)
-    back_btn = tk.Button(login_box, text="← Back to Home", command=create_first_page,
-                        font=("Arial", 10), bg="white", fg="#666666",
-                        relief="flat", cursor="hand2", borderwidth=0)
+
+    # Back button with modern styling
+    back_btn = create_modern_button(login_box, "← Back to Home",
+                                  create_first_page,
+                                  bg_color=COLORS['white'],
+                                  fg_color=COLORS['text'],
+                                  hover_color=COLORS['primary'],
+                                  font=("Arial", 10),
+                                  padx=0, pady=10)
     back_btn.pack(pady=10)
 
     # Add hover effects
@@ -254,6 +370,10 @@ def login_page():
 
     login_btn.bind("<Enter>", on_enter)
     login_btn.bind("<Leave>", on_leave)
+    register_btn.bind("<Enter>", on_enter)
+    register_btn.bind("<Leave>", on_leave)
+    back_btn.bind("<Enter>", on_enter)
+    back_btn.bind("<Leave>", on_leave)
 
 # --- CAPTCHA generator ---
 def generate_captcha():
@@ -274,80 +394,77 @@ def register_page():
     register_frame.pack(fill="both", expand=True)
 
     # Create gradient background
-    gradient_canvas = tk.Canvas(register_frame, width=root.winfo_screenwidth(), height=root.winfo_screenheight(), highlightthickness=0)
+    gradient_canvas = tk.Canvas(register_frame, width=root.winfo_screenwidth(),
+                              height=root.winfo_screenheight(), highlightthickness=0)
     gradient_canvas.pack(fill="both", expand=True)
 
-    def create_gradient(canvas, width, height):
-        canvas.delete("gradient")
-        for i in range(height):
-            r1, g1, b1 = 41, 128, 185  # #2980b9
-            r2, g2, b2 = 52, 152, 219  # #3498db
-            r = int(r1 + (r2 - r1) * (i / height))
-            g = int(g1 + (g2 - g1) * (i / height))
-            b = int(b1 + (b2 - b1) * (i / height))
-            color = f"#{r:02x}{g:02x}{b:02x}"
-            canvas.create_line(0, i, width, i, fill=color, tags="gradient")
+    create_gradient1(gradient_canvas, root.winfo_screenwidth(), root.winfo_screenheight(),
+                   COLORS['primary'], COLORS['secondary'])
 
-    create_gradient(gradient_canvas, root.winfo_screenwidth(), root.winfo_screenheight())
-
-    # Create registration box
-    register_box = tk.Frame(gradient_canvas, bg="white", padx=40, pady=40)
-    gradient_canvas.create_window(root.winfo_screenwidth() // 2, root.winfo_screenheight() // 2, 
+    # Create registration box with modern styling
+    register_box = tk.Frame(gradient_canvas, bg=COLORS['white'], padx=40, pady=40)
+    gradient_canvas.create_window(root.winfo_screenwidth() // 2, root.winfo_screenheight() // 2,
                                 window=register_box, anchor="center")
 
-    # Title
-    tk.Label(register_box, text="Create Account", font=("Arial", 24, "bold"), 
-            bg="white", fg="#2c3e50").pack(pady=(0, 20))
+    # Add shadow effect
+    register_box.configure(highlightbackground=COLORS['input_border'],
+                         highlightthickness=1)
 
-    # Decorative line
-    tk.Frame(register_box, height=3, width=100, bg="#4CAF50").pack(pady=5)
+    # Title with modern styling
+    title_label = create_modern_label(register_box, "Create Account",
+                                    font=("Arial", 24, "bold"),
+                                    fg=COLORS['text'])
+    title_label.pack(pady=(0, 20))
+
+    # Decorative line with gradient
+    line_canvas = tk.Canvas(register_box, height=3, width=100,
+                           highlightthickness=0, bg=COLORS['white'])
+    line_canvas.pack(pady=5)
+    create_gradient1(line_canvas, 100, 3, COLORS['primary'], COLORS['secondary'])
 
     # Username field
-    username_frame = tk.Frame(register_box, bg="white")
+    username_frame = tk.Frame(register_box, bg=COLORS['white'])
     username_frame.pack(fill="x", pady=10)
-    tk.Label(username_frame, text="Username", font=("Arial", 12), 
-            bg="white", fg="#2c3e50").pack(anchor="w")
-    username_entry = tk.Entry(username_frame, font=("Arial", 12), 
-                            bg="#f5f5f5", fg="#333333", relief="solid", borderwidth=1)
+    create_modern_label(username_frame, "Username",
+                       font=("Arial", 12),
+                       fg=COLORS['text']).pack(anchor="w")
+    username_entry = create_modern_entry(username_frame, "Enter username")
     username_entry.pack(fill="x", pady=2)
 
     # Password field
-    password_frame = tk.Frame(register_box, bg="white")
+    password_frame = tk.Frame(register_box, bg=COLORS['white'])
     password_frame.pack(fill="x", pady=10)
-    tk.Label(password_frame, text="Password", font=("Arial", 12), 
-            bg="white", fg="#2c3e50").pack(anchor="w")
-    password_entry = tk.Entry(password_frame, font=("Arial", 12), 
-                            bg="#f5f5f5", fg="#333333", relief="solid", 
-                            borderwidth=1, show="•")
+    create_modern_label(password_frame, "Password",
+                       font=("Arial", 12),
+                       fg=COLORS['text']).pack(anchor="w")
+    password_entry = create_modern_entry(password_frame, "Enter password", show="•")
     password_entry.pack(fill="x", pady=2)
 
     # Confirm Password field
-    confirm_frame = tk.Frame(register_box, bg="white")
+    confirm_frame = tk.Frame(register_box, bg=COLORS['white'])
     confirm_frame.pack(fill="x", pady=10)
-    tk.Label(confirm_frame, text="Confirm Password", font=("Arial", 12), 
-            bg="white", fg="#2c3e50").pack(anchor="w")
-    confirm_entry = tk.Entry(confirm_frame, font=("Arial", 12), 
-                           bg="#f5f5f5", fg="#333333", relief="solid", 
-                           borderwidth=1, show="•")
+    create_modern_label(confirm_frame, "Confirm Password",
+                       font=("Arial", 12),
+                       fg=COLORS['text']).pack(anchor="w")
+    confirm_entry = create_modern_entry(confirm_frame, "Confirm password", show="•")
     confirm_entry.pack(fill="x", pady=2)
 
-    # CAPTCHA section
-    captcha_frame = tk.Frame(register_box, bg="white")
+    # CAPTCHA section with modern styling
+    captcha_frame = tk.Frame(register_box, bg=COLORS['white'])
     captcha_frame.pack(fill="x", pady=10)
 
-    # CAPTCHA label and display
-    captcha_label_frame = tk.Frame(captcha_frame, bg="white")
+    captcha_label_frame = tk.Frame(captcha_frame, bg=COLORS['white'])
     captcha_label_frame.pack(fill="x", pady=5)
-    tk.Label(captcha_label_frame, text="CAPTCHA", font=("Arial", 12), 
-            bg="white", fg="#2c3e50").pack(side="left")
-    
-    # CAPTCHA display with refresh button
-    captcha_display_frame = tk.Frame(captcha_frame, bg="white")
+    create_modern_label(captcha_label_frame, "CAPTCHA",
+                       font=("Arial", 12),
+                       fg=COLORS['text']).pack(side="left")
+
+    captcha_display_frame = tk.Frame(captcha_frame, bg=COLORS['white'])
     captcha_display_frame.pack(fill="x", pady=5)
-    
-    captcha_display = tk.Label(captcha_display_frame, text=captcha_text, 
-                             font=("Courier", 16, "bold"), bg="#f5f5f5", 
-                             fg="#2c3e50", padx=10, pady=5)
+
+    captcha_display = create_modern_label(captcha_display_frame, captcha_text,
+                                        font=("Courier", 16, "bold"),
+                                        fg=COLORS['text'])
     captcha_display.pack(side="left", padx=5)
 
     def refresh_captcha():
@@ -355,19 +472,88 @@ def register_page():
         captcha_text = generate_captcha()
         captcha_display.config(text=captcha_text)
 
-    refresh_btn = tk.Button(captcha_display_frame, text="🔄", 
-                          command=refresh_captcha, font=("Arial", 12),
-                          bg="#f5f5f5", fg="#2c3e50", relief="flat",
-                          cursor="hand2")
+    refresh_btn = create_modern_button(captcha_display_frame, "🔄",
+                                     refresh_captcha,
+                                     bg_color=COLORS['white'],
+                                     fg_color=COLORS['primary'],
+                                     hover_color=COLORS['primary'],
+                                     font=("Arial", 12),
+                                     padx=5, pady=0)
     refresh_btn.pack(side="left", padx=5)
 
-    # CAPTCHA input
-    captcha_input_frame = tk.Frame(captcha_frame, bg="white")
-    captcha_input_frame.pack(fill="x", pady=5)
-    captcha_entry = tk.Entry(captcha_input_frame, font=("Arial", 12), 
-                           bg="#f5f5f5", fg="#333333", relief="solid", 
-                           borderwidth=1)
-    captcha_entry.pack(fill="x", pady=2)
+    captcha_entry = create_modern_entry(register_box, "Enter CAPTCHA")
+    captcha_entry.pack(fill="x", pady=10)
+
+    # Terms and Conditions with modern styling
+    terms_frame = tk.Frame(register_box, bg=COLORS['white'])
+    terms_frame.pack(fill="x", pady=10)
+
+    terms_var = tk.BooleanVar()
+    terms_check = tk.Checkbutton(terms_frame, text="I accept the Terms and Conditions",
+                                variable=terms_var, font=("Arial", 10),
+                                bg=COLORS['white'], fg=COLORS['text'],
+                                selectcolor=COLORS['white'],
+                                activebackground=COLORS['white'],
+                                activeforeground=COLORS['text'])
+    terms_check.pack(side="left", padx=5)
+
+    def show_terms():
+        terms_window = tk.Toplevel(root)
+        terms_window.title("Terms and Conditions")
+        terms_window.geometry("600x400")
+        terms_window.configure(bg=COLORS['white'])
+
+        # Add shadow effect
+        terms_window.configure(highlightbackground=COLORS['input_border'],
+                             highlightthickness=1)
+
+        # Terms content
+        terms_text = """
+        Terms and Conditions for Medical Insurance Predictor
+
+        1. Account Usage
+        - You must provide accurate information during registration
+        - You are responsible for maintaining the confidentiality of your account
+        - You must notify us immediately of any unauthorized use of your account
+
+        2. Data Privacy
+        - We collect and process your personal information as per our privacy policy
+        - Your data is used solely for insurance prediction purposes
+        - We implement security measures to protect your information
+
+        3. Service Usage
+        - The predictions provided are estimates and not guaranteed
+        - We reserve the right to modify or discontinue the service
+        - You agree to use the service for lawful purposes only
+
+        4. Liability
+        - We are not liable for any decisions made based on the predictions
+        - The service is provided "as is" without any warranties
+        - We are not responsible for any indirect or consequential damages
+
+        5. Changes to Terms
+        - We may modify these terms at any time
+        - Continued use of the service implies acceptance of modified terms
+        - You will be notified of any significant changes
+
+        By accepting these terms, you acknowledge that you have read and understood them.
+        """
+        
+        text_widget = tk.Text(terms_window, wrap="word", font=("Arial", 10),
+                            bg="white", fg="#2c3e50", padx=20, pady=20)
+        text_widget.insert("1.0", terms_text)
+        text_widget.config(state="disabled")
+        text_widget.pack(fill="both", expand=True, padx=10, pady=10)
+
+        close_btn = tk.Button(terms_window, text="Close", command=terms_window.destroy,
+                            font=("Arial", 10, "bold"), bg="#4CAF50", fg="white",
+                            padx=20, pady=5, relief="flat")
+        close_btn.pack(pady=10)
+
+    terms_link = tk.Button(terms_frame, text="View Terms", command=show_terms,
+                          font=("Arial", 10), bg="white", fg="#4CAF50",
+                          relief="flat", cursor="hand2", borderwidth=0)
+    terms_link.pack(side="left", padx=5)
 
     # Submit button
     def handle_register():
@@ -385,6 +571,9 @@ def register_page():
         if captcha_input != captcha_text or not captcha_pattern.fullmatch(captcha_input):
             messagebox.showerror("Error", "Incorrect CAPTCHA.")
             refresh_captcha()
+            return
+        if not terms_var.get():
+            messagebox.showerror("Error", "You must accept the Terms and Conditions to register.")
             return
 
         # Save user to DB
@@ -529,16 +718,20 @@ def create_second_page():
         add_placeholder(entry, placeholder_text)
         entry.pack(pady=(2, 10), ipady=5)
         entries[label_text] = entry
-    def create_gradient(canvas, width, height):
-        canvas.delete("gradient")
-        for i in range(height):
-            r1, g1, b1 = 245, 246, 245  # #f5f6f5
-            r2, g2, b2 = 255, 255, 255  # #ffffff
-            r = int(r1 + (r2 - r1) * (i / height))
-            g = int(g1 + (g2 - g1) * (i / height))
-            b = int(b1 + (b2 - b1) * (i / height))
-            color = f"#{r:02x}{g:02x}{b:02x}"
-            canvas.create_line(0, i, width, i, fill=color, tags="gradient")
+
+        # Add validation for age input
+        if label_text == "Age":
+            def validate_age(P):
+                if P == "":  # Allow empty string for placeholder
+                    return True
+                try:
+                    age = float(P)
+                    return 0 <= age <= 120
+                except ValueError:
+                    return False
+
+            vcmd = (root.register(validate_age), '%P')
+            entry.config(validate='key', validatecommand=vcmd)
 
     def create_dropdown(label_text, options):
         lbl = tk.Label(input_frame, text=label_text, font=("Arial", 12, "bold"), bg="#ffffff", fg="#2c3e50")
@@ -590,6 +783,18 @@ def create_second_page():
                     if not value or value == "Age" or value == "BMI" or value == "Eg: 500000":
                         messagebox.showerror("Input Error", f"Please enter a value for {label}")
                         return
+                    
+                    # Additional validation for Age
+                    if label == "Age":
+                        try:
+                            age = float(value)
+                            if not (0 <= age <= 120):
+                                messagebox.showerror("Input Error", "Age must be between 0 and 120 years")
+                                return
+                        except ValueError:
+                            messagebox.showerror("Input Error", "Please enter a valid age")
+                            return
+                    
                     input_data[label] = value
             
             print("Raw Input Data:", input_data)
@@ -667,10 +872,20 @@ def create_second_page():
             result_frame = tk.Frame(canvas_left, bg="white", highlightthickness=2, highlightbackground="#d3d3d3")
             gradient_canvas = tk.Canvas(result_frame, width=500, height=400, highlightthickness=0)
             gradient_canvas.pack(fill="both", expand=True)
+            def create_gradient(canvas, width, height): 
+                canvas.delete("gradient")
+                for i in range(height):
+                    r1, g1, b1 = 41, 128, 185  # #2980b9
+                    r2, g2, b2 = 52, 152, 219  # #3498db
+                    r = int(r1 + (r2 - r1) * (i / height))
+                    g = int(g1 + (g2 - g1) * (i / height))
+                    b = int(b1 + (b2 - b1) * (i / height))
+                    color = f"#{r:02x}{g:02x}{b:02x}"
+                canvas.create_line(0, i, width, i, fill=color, tags="gradient")
             create_gradient(gradient_canvas, 500, 400)
 
             content_frame = tk.Frame(gradient_canvas, bg="white")
-            gradient_canvas.create_window(250, 200, window=content_frame, anchor="center")
+            gradient_canvas.create_window(250, 200, window=content_frame, anchor="center") 
 
             tk.Label(content_frame, text="Prediction Result", font=("Arial", 18, "bold"), bg="white", fg="#2c3e50").pack(pady=(10, 10))
             labels = [
@@ -884,6 +1099,136 @@ def create_navbar():
         current_user = 0
         show_login_page()
 
+    def handle_delete_account():
+        if current_user == 0 or current_user == "admin":
+            return
+            
+        # Create delete account window
+        delete_window = tk.Toplevel(root)
+        delete_window.title("Delete Account")
+        delete_window.geometry("400x500")
+        delete_window.configure(bg="white")
+        
+        # Create main frame
+        main_frame = tk.Frame(delete_window, bg="white", padx=20, pady=20)
+        main_frame.pack(fill="both", expand=True)
+        
+        # Warning message
+        warning_text = "⚠️ Warning: This action cannot be undone. All your data will be permanently deleted."
+        warning_label = tk.Label(main_frame, text=warning_text, font=("Arial", 12, "bold"),
+                               bg="white", fg="#e74c3c", wraplength=350)
+        warning_label.pack(pady=(0, 20))
+        
+        # Password verification
+        password_frame = tk.Frame(main_frame, bg="white")
+        password_frame.pack(fill="x", pady=10)
+        tk.Label(password_frame, text="Enter your password:", font=("Arial", 12),
+                bg="white", fg="#2c3e50").pack(anchor="w")
+        password_entry = tk.Entry(password_frame, font=("Arial", 12),
+                                bg="#f5f5f5", fg="#333333", relief="solid",
+                                borderwidth=1, show="•")
+        password_entry.pack(fill="x", pady=5)
+        
+        # CAPTCHA
+        captcha_frame = tk.Frame(main_frame, bg="white")
+        captcha_frame.pack(fill="x", pady=10)
+        
+        captcha_text = generate_captcha()
+        captcha_label = tk.Label(captcha_frame, text=captcha_text,
+                               font=("Courier", 16, "bold"), bg="#f5f5f5",
+                               fg="#2c3e50", padx=10, pady=5)
+        captcha_label.pack(side="left", padx=5)
+        
+        def refresh_captcha():
+            nonlocal captcha_text
+            captcha_text = generate_captcha()
+            captcha_label.config(text=captcha_text)
+        
+        refresh_btn = tk.Button(captcha_frame, text="🔄",
+                              command=refresh_captcha, font=("Arial", 12),
+                              bg="#f5f5f5", fg="#2c3e50", relief="flat",
+                              cursor="hand2")
+        refresh_btn.pack(side="left", padx=5)
+        
+        captcha_entry = tk.Entry(main_frame, font=("Arial", 12),
+                               bg="#f5f5f5", fg="#333333", relief="solid",
+                               borderwidth=1)
+        captcha_entry.pack(fill="x", pady=10)
+        
+        def delete_account():
+            password = password_entry.get()
+            captcha_input = captcha_entry.get().strip()
+            
+            if not password or not captcha_input:
+                messagebox.showerror("Error", "Please fill in all fields.")
+                return
+                
+            if captcha_input != captcha_text or not captcha_pattern.fullmatch(captcha_input):
+                messagebox.showerror("Error", "Incorrect CAPTCHA.")
+                refresh_captcha()
+                return
+                
+            try:
+                conn = sqlite3.connect('insurance_data.db')
+                c = conn.cursor()
+                
+                # Verify password
+                c.execute("SELECT * FROM login_details WHERE name=? AND password=?", 
+                         (current_user, password))
+                if not c.fetchone():
+                    messagebox.showerror("Error", "Incorrect password.")
+                    return
+                
+                # Delete user's predictions
+                c.execute("DELETE FROM predictions WHERE role=?", (current_user,))
+                
+                # Delete user account
+                c.execute("DELETE FROM login_details WHERE name=?", (current_user,))
+                
+                conn.commit()
+                conn.close()
+                
+                messagebox.showinfo("Success", "Your account has been deleted successfully.")
+                delete_window.destroy()
+                handle_logout()
+                
+            except Exception as e:
+                messagebox.showerror("Error", f"Error deleting account: {str(e)}")
+        
+        # Delete button
+        delete_btn = tk.Button(main_frame, text="Delete Account",
+                             command=delete_account,
+                             font=("Arial", 12, "bold"), bg="#e74c3c",
+                             fg="white", padx=20, pady=10, relief="flat",
+                             cursor="hand2")
+        delete_btn.pack(pady=20)
+        
+        # Cancel button
+        cancel_btn = tk.Button(main_frame, text="Cancel",
+                             command=delete_window.destroy,
+                             font=("Arial", 12), bg="#95a5a6",
+                             fg="white", padx=20, pady=10, relief="flat",
+                             cursor="hand2")
+        cancel_btn.pack(pady=10)
+        
+        # Add hover effects
+        def on_enter(e):
+            if e.widget == delete_btn:
+                e.widget.config(bg="#c0392b")
+            elif e.widget == cancel_btn:
+                e.widget.config(bg="#7f8c8d")
+        
+        def on_leave(e):
+            if e.widget == delete_btn:
+                e.widget.config(bg="#e74c3c")
+            elif e.widget == cancel_btn:
+                e.widget.config(bg="#95a5a6")
+        
+        delete_btn.bind("<Enter>", on_enter)
+        delete_btn.bind("<Leave>", on_leave)
+        cancel_btn.bind("<Enter>", on_enter)
+        cancel_btn.bind("<Leave>", on_leave)
+
     create_menu_button("Home", handle_home)
     create_menu_button("Policies", dis)
     create_menu_button("Histories", create_history_page)
@@ -891,6 +1236,8 @@ def create_navbar():
     create_menu_button("Contact Us", create_contact_page)
     if(current_user == "admin"):
         create_menu_button("Update", admin_update)
+    elif current_user != 0:  # Add delete account button for regular users
+        create_menu_button("Delete Account", handle_delete_account)
     
     # Add logout button on the right side
     logout_btn = tk.Label(nav_frame, text="Logout", font=("Arial", 16, "bold"), 
@@ -1531,8 +1878,8 @@ def create_contact_page():
 
     # Contact information with icons
     contact_info = [
-        ("📧", "Email", "kethavathsamba11@gmail.com"),
-        ("📱", "Phone", "9908108215"),
+        ("📧", "Email", "example@gmail.com"),
+        ("📱", "Phone", "9999999999"),
         ("⏰", "Business Hours", "Monday - Friday: 9:00 AM - 5:00 PM"),
         ("🏢", "Location", "Hyderabad, Telangana, India")
     ]
@@ -1592,7 +1939,7 @@ def create_contact_page():
                           padx=20, pady=10, relief="flat")
     submit_btn.pack(pady=20)
 
-    social_frame = tk.Frame(main_content, bg="white")
+    social_frame = tk.Frame(main_content, bg="white") 
     social_frame.pack(pady=20)
 
     social_links = [
